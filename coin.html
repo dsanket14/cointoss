@@ -26,6 +26,9 @@
         }
         .buttons {
             margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
         button {
             padding: 12px 25px;
@@ -36,17 +39,14 @@
             border-radius: 5px;
             transition: background 0.3s ease, transform 0.2s;
         }
-        .heads-btn {
-            background-color: #FFFFFF;
-            color: white;
-        }
         .flip-btn {
             background-color: #007BFF;
             color: white;
         }
         .tails-btn {
             background-color: #FFFFFF;
-            color: white;
+            color: FFFFFF;
+            border: 1px solid #FFFFFF;
         }
         button:hover {
             opacity: 0.8;
@@ -60,55 +60,59 @@
 <div class="container">
     <h1>Coin Toss</h1>
     <img id="coinImage" src="img.png" alt="Coin">
-    <p id="result">Click a button to select Heads or Tails!</p>
+    <p id="result">Click the Flip button to start!</p>
     <div class="buttons">
-        <button class="heads-btn" onclick="stopFlipping('Heads', this)">Heads</button>
         <button class="flip-btn" onclick="startFlipping(this)">Flip Coin</button>
-        <button class="tails-btn" onclick="stopFlipping('Tails', this)">Tails</button>
+        <button class="tails-btn" onclick="stopFlippingEarly(this)"></button>
     </div>
 </div>
 
 <script>
     let flippingInterval;
     let isFlipping = false;
+    let stopTimeout;
+    let stoppedEarly = false;
 
     function startFlipping(button) {
-        if (isFlipping) return; // If already flipping, do nothing
+        if (isFlipping) return;
         isFlipping = true;
+        stoppedEarly = false;
 
         const coinImage = document.getElementById("coinImage");
-
         let angle = 0;
         flippingInterval = setInterval(() => {
             angle += 180;
             coinImage.style.transform = `rotateY(${angle}deg)`;
-            coinImage.src = "img.png"; // Keep flipping the same image
-        }, 200); // Flip every 200ms
-
-        // Button click animation
-        button.classList.add("pressed");
-        setTimeout(() => {
-            button.classList.remove("pressed");
+            coinImage.src = "img.png";
         }, 200);
+
+        button.classList.add("pressed");
+        setTimeout(() => button.classList.remove("pressed"), 200);
+
+        stopTimeout = setTimeout(() => {
+            if (!stoppedEarly) {
+                stopFlipping("Tails");
+            }
+        }, 5000); 
     }
 
-    function stopFlipping(choice, button) {
-        if (!isFlipping) return; // If not flipping, do nothing
-        clearInterval(flippingInterval); // Stop flipping
-        isFlipping = false;
+    function stopFlippingEarly(button) {
+        if (!isFlipping) return;
+        stoppedEarly = true;
+        clearTimeout(stopTimeout);
+        stopFlipping("Heads");
 
-        // Update image and result
+        button.classList.add("pressed");
+        setTimeout(() => button.classList.remove("pressed"), 200);
+    }
+
+    function stopFlipping(choice) {
+        clearInterval(flippingInterval);
+        isFlipping = false;
         document.getElementById("coinImage").style.transform = "rotateY(0deg)";
         document.getElementById("coinImage").src = choice === "Heads" ? "heads.png" : "tails.png";
-        document.getElementById("result").textContent = `${choice}`;
-
-        // Button click animation
-        button.classList.add("pressed");
-        setTimeout(() => {
-            button.classList.remove("pressed");
-        }, 200);
+        document.getElementById("result").textContent = choice;
     }
 </script>
-
 </body>
 </html>
